@@ -1,0 +1,54 @@
+from typing import List, Optional
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+from query import ask_question
+from config import DEFAULT_K
+
+app = FastAPI(title="RAG Retrieval API")
+
+
+class QueryRequest(BaseModel):
+    question: str
+    # Required until a routing agent picks the collection automatically.
+    collection: str  # one of AURORA_PRODUCT / AURORA_RETURNS_REFUNDS / AURORA_TECHNICAL_SUPPORT
+    search_type: str = "hybrid"  # "keyword", "vector", or "hybrid"
+    k: int = DEFAULT_K
+
+
+class ContextChunk(BaseModel):
+    source_file: Optional[str] = None
+    doc_type: Optional[str] = None
+    page_number: Optional[int] = None
+    content_type: Optional[str] = None
+    table_name: Optional[str] = None
+    section_heading: Optional[str] = None
+    product_name: Optional[str] = None
+    text: str
+
+
+class QueryResponse(BaseModel):
+    system_prompt: str
+    context: List[ContextChunk]
+    question: str
+    search_type: str
+    answer: str
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+@app.post("/query", response_model=QueryResponse)
+def query(request: QueryRequest):
+    result = ask_question(
+        request.question, collection=request.collection,
+        search_type=request.search_type, k=request.k)
+    return QueryResponse(**result)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8100)
