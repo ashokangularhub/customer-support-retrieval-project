@@ -1,10 +1,21 @@
+import importlib
+import sys
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from query import ask_question
-from config import DEFAULT_K
+# Make this file's own directory importable regardless of cwd/how it's
+# launched, and import local flat modules dynamically (not via `from X
+# import Y`) so editor "organize imports" actions can't reorder them above
+# this sys.path bootstrap.
+_SRC = Path(__file__).resolve().parent
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
+ask_question = importlib.import_module("query").ask_question
+DEFAULT_K = importlib.import_module("config").DEFAULT_K
 
 app = FastAPI(title="RAG Retrieval API")
 
@@ -51,4 +62,4 @@ def query(request: QueryRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8100)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
