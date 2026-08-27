@@ -1,4 +1,5 @@
 import importlib
+import logging
 import sys
 from pathlib import Path
 from typing import List, Optional
@@ -16,8 +17,15 @@ if str(_SRC) not in sys.path:
 
 ask_question = importlib.import_module("query").ask_question
 DEFAULT_K = importlib.import_module("config").DEFAULT_K
+RequestResponseLoggingMiddleware = importlib.import_module(
+    "logging_middleware").RequestResponseLoggingMiddleware
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+)
 
 app = FastAPI(title="RAG Retrieval API")
+app.add_middleware(RequestResponseLoggingMiddleware)
 
 
 class QueryRequest(BaseModel):

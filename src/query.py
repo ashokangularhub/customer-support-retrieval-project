@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
@@ -9,10 +10,9 @@ from config import DEFAULT_K, DEFAULT_SEARCH_TYPE
 
 load_dotenv()
 
+_PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 SYSTEM_PROMPT = (
-    "You are a helpful assistant. Answer the question using only the "
-    "provided context. If the answer isn't in the context, say you don't know."
-)
+    _PROMPTS_DIR / "system_prompt.txt").read_text(encoding="utf-8").strip()
 
 PROMPT_TEMPLATE = ChatPromptTemplate.from_messages([
     ("system", SYSTEM_PROMPT),
